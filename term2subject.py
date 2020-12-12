@@ -11,7 +11,7 @@ import argparse
 #
 # https://codeburst.io/how-to-use-the-easiest-gui-of-your-life-in-python-d3762270a2a0
 
-#@Gooey
+@Gooey
 def main():
     parser = argparse.ArgumentParser(description='Do stuff with strings.')
     parser.add_argument('-a','--term', required=False, nargs='+') 
