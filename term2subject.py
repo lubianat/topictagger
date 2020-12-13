@@ -8,12 +8,11 @@ import argparse
 
 # Simple GUI based on Gooey
 #
-#
-# https://codeburst.io/how-to-use-the-easiest-gui-of-your-life-in-python-d3762270a2a0
+# https://github.com/chriskiehl/Gooey 
 
 @Gooey
 def main():
-    parser = argparse.ArgumentParser(description='Do stuff with strings.')
+    parser = argparse.ArgumentParser(description='Add main subject statements based on Wikidata searches.')
     parser.add_argument('-a','--term', required=False, nargs='+') 
     parser.add_argument('-m','--term_id', required=False, nargs='+')
 
