@@ -41,6 +41,7 @@ def main():
     def pull_related_ids(url):
         r = requests.get(url)
         df = json_normalize(r.json()["query"]["search"])
+        
 
         ids = ["wd:"+a for a in df["title"]]
         return(ids)
@@ -66,6 +67,28 @@ def main():
         articles_dataframe = wikidata2df(articles)
         return(articles_dataframe)
 
+    def get_info(ids):
+
+        items = "{"
+        for i in ids[:5]:
+            items = items + " " + i
+        items = items + " }"
+
+
+        articles = """
+        SELECT ?item ?itemLabel ?itemDescription ?typeLabel
+        WHERE
+        {
+        VALUES ?item """ + items + """.
+        ?item wdt:P31 ?type.
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+        }
+        """
+
+        articles_dataframe = wikidata2df(articles)
+        return(articles_dataframe)
+
+
 
     def print_qs_to_file(articles_dataframe, term, term_id):
         with open(term + ".qs", "w+") as f:
@@ -86,7 +109,14 @@ def main():
                 r = "|S887|"
                 ro = "Q69652283"
                 print(s + p + o + r + ro + "\n")
+    
+    if args["term"]:
+        url = prepare_url_for_search(args["term"][0])
+        ids =  pull_related_ids(url)
+        df = get_info(ids)
 
+        print("The top 10 ids for your term:")
+        print(df.head(5))
 
     if args["term"] and args["term_id"]:
         run_all_to_prompt(args["term"][0], args["term_id"][0])
