@@ -8,70 +8,81 @@
 #
 
 library(shiny)
-library(stringr)
-library(httr)
-
-prepare_url_for_search <- function(term)
-{
-    term_for_url = str_replace(term," ","%20")
-    term_for_url = paste0("%22", term_for_url, "%22")
-    
-    url = paste0("https://www.wikidata.org/w/api.php?action=query&list=search&srsearch=",
-                 term_for_url,
-                 "&srlimit=500&srprop=size&formatversion=2&format=json")
-    return(url)
-}
-
-pull_related_ids <- function(url)
-{
-    resp = GET(url)
-    obj = jsonlite::fromJSON(content(resp, "text"), simplifyVector = FALSE)
-    search = obj[["query"]][["search"]]
-    ids = c()
-    for (item in search)
-    {
-        ids <- c(ids, item$title)
-    }
-    return(ids)
-}
-url = prepare_url_for_search("osteocyte")
-pull_related_ids(url)
-    
-
+source("utils.R")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("TopicTagger"),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
+            textInput(inputId="term",
+                      label="Term",
+                      value = "",
+                      width = NULL,
+                      placeholder = NULL),
+            textInput(inputId="term_qid",
+                      label="Term QID",
+                      value = "",
+                      width = NULL,
+                      placeholder = NULL),
+            numericInput(inputId="n_articles", 
+                         label="Number of articles", 
+                         value=200, 
+                         min = 1, 
+                         max = 200, 
+                         step = 1)
+            
+            
         ),
-
-        # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
-        )
+            actionButton("copyButton", "Copy!"),
+            textOutput("summary"),
+            verbatimTextOutput("qs") 
+            ),
+
+
     )
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+    output$summary <- renderText({
+        term = input$term
+        n = input$n_articles
+        paste("Obtaining up to", n, "articles about", term)
+    })
+    
+    output$qs <- renderText({
+        term = input$term
+        term_qid = input$term_qid
+        n_articles = input$n_articles
+        url = prepare_url_for_search(term, n_results = n_articles)
+        ids = pull_related_ids(url)
+        articles = filter_for_instances_of_article(ids)
+        result = prepare_qs_to_render(article_qids=articles,
+                           term=term,
+                           term_id=term_qid)
+        print(result)
+        return(result)
+    })
+    
+    
+    observeEvent(input$copyButton, {
+        term = input$term
+        term_qid = input$term_qid
+        n_articles = input$n_articles
+        url = prepare_url_for_search(term, n_results = n_articles)
+        ids = pull_related_ids(url)
+        articles = filter_for_instances_of_article(ids)
+        result = prepare_qs_to_render(article_qids=articles,
+                                      term=term,
+                                      term_id=term_qid)
+        clipr::write_clip(result)
     })
 }
 

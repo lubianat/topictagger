@@ -1,0 +1,12 @@
+name: topictagger
+title: topictagger
+username:
+account: lubianat
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3532630
+bundleId: 4149811
+url: https://lubianat.shinyapps.io/topictagger/
+when: 1611758773.59999
+asMultiple: FALSE
+asStatic: FALSE
