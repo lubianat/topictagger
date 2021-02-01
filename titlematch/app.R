@@ -14,7 +14,11 @@ source("utils.R")
 ui <- fluidPage(
 
     # Application title
-    titlePanel("TopicTagger"),
+    windowTitle = "TopicTagger",
+    title = tags$head(tags$link(rel="icon", 
+                                href="https://raw.githubusercontent.com/lubianat/titlematch/master/favicon-32x32.png", 
+                                type="image/x-icon")
+    ),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
