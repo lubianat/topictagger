@@ -9,6 +9,7 @@
 
 library(shiny)
 source("utils.R")
+CLIPR_ALLOW=TRUE
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -86,7 +87,7 @@ server <- function(input, output) {
         result = prepare_qs_to_render(article_qids=articles,
                                       term=term,
                                       term_id=term_qid)
-        clipr::write_clip(result)
+        clipr::write_clip(result, allow_non_interactive = TRUE)
     })
 }
 
