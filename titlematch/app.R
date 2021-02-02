@@ -63,19 +63,25 @@ server <- function(input, output) {
         result = prepare_qs_to_render(article_qids=articles,
                            term=term,
                            term_id=term_qid)
-        print(result)
         return(result)
     })
     
     
     output$clip <- renderUI({
-        rclipButton("clipbtn", "Copy", input$term, icon("clipboard"))
+        term = input$term
+        term_qid = input$term_qid
+        n_articles = input$n_articles
+        url = prepare_url_for_search(term, n_results = n_articles)
+        ids = pull_related_ids(url)
+        articles = filter_for_instances_of_article(ids)
+        result = prepare_qs_to_render(article_qids=articles,
+                                      term=term,
+                                      term_id=term_qid)
+        
+        result = paste(result, collapse="")
+        rclipButton("clipbtn", "Copy", result, icon("clipboard"))
     })
     
-    url <- a("Google Homepage", href="https://www.google.com/")
-    output$tab <- renderUI({
-        tagList("URL link:", url)
-    })
     
 }
 
