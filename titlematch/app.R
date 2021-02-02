@@ -1,27 +1,16 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 source("utils.R")
-CLIPR_ALLOW=TRUE
+library(rclipboard)
 
-# Define UI for application that draws a histogram
 ui <- fluidPage(
 
-    # Application title
+    rclipboardSetup(),
     windowTitle = "TopicTagger",
     title = tags$head(tags$link(rel="icon", 
                                 href="https://raw.githubusercontent.com/lubianat/titlematch/master/favicon-32x32.png", 
                                 type="image/x-icon")
     ),
 
-    # Sidebar with a slider input for number of bins 
     sidebarLayout(
         sidebarPanel(
             textInput(inputId="term",
@@ -44,7 +33,10 @@ ui <- fluidPage(
             
         ),
         mainPanel(
-            actionButton("copyButton", "Copy!"),
+            
+            # UI ouputs for the copy-to-clipboard buttons
+            uiOutput("clip"),
+            tags$a(href="https://quickstatements.toolforge.org/#/batch", "Go to Quickstatements!"),
             textOutput("summary"),
             verbatimTextOutput("qs") 
             ),
@@ -53,7 +45,6 @@ ui <- fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
 
     output$summary <- renderText({
@@ -77,18 +68,15 @@ server <- function(input, output) {
     })
     
     
-    observeEvent(input$copyButton, {
-        term = input$term
-        term_qid = input$term_qid
-        n_articles = input$n_articles
-        url = prepare_url_for_search(term, n_results = n_articles)
-        ids = pull_related_ids(url)
-        articles = filter_for_instances_of_article(ids)
-        result = prepare_qs_to_render(article_qids=articles,
-                                      term=term,
-                                      term_id=term_qid)
-        clipr::write_clip(result, allow_non_interactive = TRUE)
+    output$clip <- renderUI({
+        rclipButton("clipbtn", "Copy", input$term, icon("clipboard"))
     })
+    
+    url <- a("Google Homepage", href="https://www.google.com/")
+    output$tab <- renderUI({
+        tagList("URL link:", url)
+    })
+    
 }
 
 # Run the application 
