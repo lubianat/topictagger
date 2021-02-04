@@ -8,7 +8,7 @@ ui <- fluidPage(
     windowTitle = "TopicTagger",
     title = tags$head(tags$link(rel="icon", 
                                 href="https://raw.githubusercontent.com/lubianat/titlematch/master/favicon-32x32.png", 
-                                type="image/x-icon")
+                                type="image/x-icon"),
     ),
 
     sidebarLayout(
@@ -18,6 +18,8 @@ ui <- fluidPage(
                       value = "",
                       width = NULL,
                       placeholder = NULL),
+            dataTableOutput('candidate_qids'),
+            uiOutput("search"),
             textInput(inputId="term_qid",
                       label="Term QID",
                       value = "",
@@ -47,11 +49,35 @@ ui <- fluidPage(
 
 server <- function(input, output) {
 
+    
+    output$search <-renderUI({
+        term = input$term
+        url = a("Search on Wikidata", 
+                href=paste0("https://www.wikidata.org/w/index.php?search=", term))
+        print("Here")
+        tagList("URL link:", url)
+        
+    })
     output$summary <- renderText({
         term = input$term
         n = input$n_articles
         paste("Obtaining up to", n, "articles about", term)
     })
+    
+    
+    output$candidate_qids <- renderDataTable({
+        term = input$term
+        term_qid = input$term_qid
+        n_articles = input$n_articles
+        url = prepare_url_for_search(term, n_results = n_articles)
+        ids = pull_related_ids(url)
+        articles = filter_for_instances_of_article(ids)
+        descriptions = get_top_descriptions(ids=ids,
+                                            article_ids= articles)
+        descriptions$itemDescription = NULL
+        return(descriptions)
+    }, escape = FALSE, options = list(dom = 't'))
+    
     
     output$qs <- renderText({
         term = input$term
@@ -63,7 +89,12 @@ server <- function(input, output) {
         result = prepare_qs_to_render(article_qids=articles,
                            term=term,
                            term_id=term_qid)
-        return(result)
+        
+        if (term_qid == ""){
+            return("Waiting for a term QID")
+        } else {
+            return(result)
+        }
     })
     
     

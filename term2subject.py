@@ -70,7 +70,7 @@ def main():
     def get_info(ids):
 
         items = "{"
-        for i in ids[:5]:
+        for i in ids[:3]:
             items = items + " " + i
         items = items + " }"
 

@@ -34,6 +34,73 @@ pull_related_ids <- function(url)
   return(ids)
 }
 
+#' make stub
+#'
+#' @param string A string
+#' @param len The length of the stub to return
+#' @param ending The end of the stub. Defaults to "..."
+make_stub <- function(string, len, ending="...")
+{
+  if (nchar(string)<50){
+    return(string)
+  } else {
+    paste0(substr(string,1,len), ending)
+  }
+}
+
+#' Get labels and descriptions of top 5
+#'
+#' @param ids A list of Wikidata ids
+get_top_descriptions <- function(ids, article_ids)
+{    
+  
+  counter = 0
+  items = "{"
+  for(i in ids[!(ids %in% article_ids)])
+  {
+    items = paste0(items, " wd:", i)
+    counter = counter +1
+    
+    if (counter == 5){
+      break
+    }
+  }
+  items = paste0(items, " }")
+  
+  
+  descriptions_query = paste0(' SELECT ?item ?itemLabel ?itemDescription ?typeLabel
+            WHERE
+            {
+            VALUES ?item ', items, '.
+            ?item wdt:P31 ?type .
+            SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
+            }
+            ')
+  
+  descriptions_dataframe = query_wikidata(descriptions_query)
+  
+  links = c()
+  for (u in descriptions_dataframe[["item"]])
+  {
+    qid =str_replace(u, "http://www.wikidata.org/entity/", "")
+    link = paste0("<a href=",u,">", qid, "</a>")
+    links = c(links, link)
+  }
+  descriptions_dataframe[["item"]] = links
+  
+  descriptions = c()
+  for (u in descriptions_dataframe[["itemDescription"]])
+  {
+    description = make_stub(u, len=50)
+    descriptions = c(descriptions, description)
+  }
+  descriptions_dataframe[["itemDescription"]] = descriptions
+  return(descriptions_dataframe)
+}
+
+
+
+
 #' Select which QIDs on a list are instances of article
 #'
 #' @param ids A list of Wikidata ids
