@@ -7,7 +7,7 @@ library(WikidataQueryServiceR)
 #' @param term A string to search on Wikidata
 #' @param n_results The number of search results. Defaults to 200.
 prepare_url_for_search <- function(term, n_results = 200) {
-  term_for_url <- str_replace(term, " ", "%20")
+  term_for_url <- str_replace(term, " ", "_")
   term_for_url <- paste0("%22", term_for_url, "%22")
 
   url <- paste0(
