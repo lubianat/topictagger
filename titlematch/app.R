@@ -29,16 +29,7 @@ ui <- fluidPage(
         value = "",
         width = NULL,
         placeholder = NULL
-      ),
-      numericInput(
-        inputId = "n_articles",
-        label = "Number of articles",
-        value = 200,
-        min = 1,
-        max = 200,
-        step = 1
-      )
-    ),
+      )),
     mainPanel(
 
       # UI ouputs for the copy-to-clipboard buttons
@@ -61,8 +52,8 @@ server <- function(input, output) {
   })
   output$summary <- renderText({
     term <- input$term
-    n <- input$n_articles
-    paste("Obtaining up to", n, "articles about", term)
+    term_qid <- input$term_qid
+    paste("Obtaining articles about", term, "that do not have", term_qid, "as main subject")
   })
 
 
@@ -70,8 +61,7 @@ server <- function(input, output) {
     {
       term <- input$term
       term_qid <- input$term_qid
-      n_articles <- input$n_articles
-      url <- prepare_url_for_search(term, n_results = n_articles)
+      url <- prepare_url_for_search(term)
       ids <- pull_related_ids(url)
       articles <- filter_for_instances_of_article(ids)
       descriptions <- get_top_descriptions(
@@ -89,12 +79,9 @@ server <- function(input, output) {
   output$qs <- renderText({
     term <- input$term
     term_qid <- input$term_qid
-    n_articles <- input$n_articles
-    url <- prepare_url_for_search(term, n_results = n_articles)
-    ids <- pull_related_ids(url)
-    articles <- filter_for_instances_of_article(ids)
+    article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
     result <- prepare_qs_to_render(
-      article_qids = articles,
+      article_qids = article_qids,
       term = term,
       term_id = term_qid
     )
@@ -110,12 +97,9 @@ server <- function(input, output) {
   output$clip <- renderUI({
     term <- input$term
     term_qid <- input$term_qid
-    n_articles <- input$n_articles
-    url <- prepare_url_for_search(term, n_results = n_articles)
-    ids <- pull_related_ids(url)
-    articles <- filter_for_instances_of_article(ids)
+    article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
     result <- prepare_qs_to_render(
-      article_qids = articles,
+      article_qids = article_qids,
       term = term,
       term_id = term_qid
     )

@@ -2,6 +2,52 @@ library(stringr)
 library(httr)
 library(WikidataQueryServiceR)
 
+
+get_article_qids_via_maintenance_query <- function(topic_term, topic_qid){
+property = "P921"
+maintenance_query <- paste0('
+SELECT 
+  DISTINCT 
+  # Remove ?item and ?title to generate table
+  # in Quickstatements V1 syntax
+  # ?item ?title
+  (REPLACE(STR(?item), ".*Q", "Q") AS ?qid) 
+  ("', property, '" AS ?property)
+   # ============= Want to change the topic? Change the next line! =============
+  ("', topic_qid, '" AS ?topic)
+  ("S887" AS ?heuristic)
+  ("Q69652283" AS ?deduced)
+
+WHERE {
+  hint:Query hint:optimizer "None".
+  
+{  SERVICE wikibase:mwapi {
+    bd:serviceParam wikibase:api "Search";
+                    wikibase:endpoint "www.wikidata.org";
+                    
+   # ============= Want to change the topic? Change the next line! =============
+                    mwapi:srsearch "\\"', topic_term,'\\" haswbstatement:P31=Q13442814 -haswbstatement:P921=', topic_qid,'".
+      ?page_title wikibase:apiOutput mwapi:title.
+  }
+ }
+  BIND(IRI(CONCAT(STR(wd:), ?page_title)) AS ?item)
+  
+  ?item wdt:P1476 ?title.
+  # ============= Want to change the topic? Change the next line! =============
+  FILTER CONTAINS(LCASE(?title), "', topic_term,'"). # also check for variants, e.g. without the dash and/ or with "2019"
+
+}
+
+')
+
+maintenance_dataframe <- query_wikidata(maintenance_query)
+
+return(maintenance_dataframe$qid)
+
+}
+
+
+
 #' Prepare URL for Wikidata search
 #'
 #' @param term A string to search on Wikidata
