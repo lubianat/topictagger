@@ -35,8 +35,8 @@ WHERE {
   ?item wdt:P1476 ?title.
   # ============= Want to change the topic? Change the next line! =============
   FILTER CONTAINS(LCASE(?title), "', topic_term,'"). # also check for variants, e.g. without the dash and/ or with "2019"
-
 }
+LIMIT 300
 
 ')
 

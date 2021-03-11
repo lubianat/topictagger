@@ -21,6 +21,7 @@ ui <- fluidPage(
         width = NULL,
         placeholder = NULL
       ),
+      submitButton(text = "Submit term", icon = NULL, width = NULL),
       dataTableOutput("candidate_qids"),
       uiOutput("search"),
       textInput(
@@ -29,7 +30,10 @@ ui <- fluidPage(
         value = "",
         width = NULL,
         placeholder = NULL
-      )),
+      ),
+      submitButton(text = "Submit QID", icon = NULL, width = NULL)
+      ),
+    
     mainPanel(
 
       # UI ouputs for the copy-to-clipboard buttons
@@ -53,7 +57,7 @@ server <- function(input, output) {
   output$summary <- renderText({
     term <- input$term
     term_qid <- input$term_qid
-    paste("Obtaining articles about", term, "that do not have", term_qid, "as main subject")
+    paste("Obtaining up to 300 articles about", term, "that do not have", term_qid, "as main subject")
   })
 
 
@@ -69,7 +73,7 @@ server <- function(input, output) {
         article_ids = articles
       )
       descriptions$itemDescription <- NULL
-      return(descriptions)
+      return(head(descriptions))
     },
     escape = FALSE,
     options = list(dom = "t")
@@ -79,16 +83,15 @@ server <- function(input, output) {
   output$qs <- renderText({
     term <- input$term
     term_qid <- input$term_qid
-    article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
-    result <- prepare_qs_to_render(
-      article_qids = article_qids,
-      term = term,
-      term_id = term_qid
-    )
-
     if (term_qid == "") {
       return("Waiting for a term QID")
     } else {
+      article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
+      result <- prepare_qs_to_render(
+        article_qids = article_qids,
+        term = term,
+        term_id = term_qid
+      )
       return(result)
     }
   })
@@ -97,13 +100,16 @@ server <- function(input, output) {
   output$clip <- renderUI({
     term <- input$term
     term_qid <- input$term_qid
-    article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
-    result <- prepare_qs_to_render(
-      article_qids = article_qids,
-      term = term,
-      term_id = term_qid
-    )
-
+    if (term_qid == "") {
+      result <- "Waiting for a term QID"
+    } else {
+      article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
+      result <- prepare_qs_to_render(
+        article_qids = article_qids,
+        term = term,
+        term_id = term_qid
+      )
+    }
     result <- paste(result, collapse = "")
     rclipButton("clipbtn", "Copy", result, icon("clipboard"))
   })
