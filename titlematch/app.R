@@ -3,21 +3,21 @@ library(rclipboard)
 source("utils.R")
 
 ui <- fluidPage(
-
   rclipboardSetup(),
   windowTitle = "TopicTagger",
-  title = tags$head(tags$link(
-    rel = "icon",
-    href = "https://raw.githubusercontent.com/lubianat/titlematch/master/assets/favicon-32x32.png",
-    type = "image/x-icon"
-  ), ),
-
+  title = tags$head(
+    tags$link(rel = "icon",
+              href = "https://raw.githubusercontent.com/lubianat/titlematch/master/assets/favicon-32x32.png",
+              type = "image/x-icon"),
+    
+  ),
+  
   sidebarLayout(
     sidebarPanel(
       textInput(
         inputId = "term",
         label = "Term",
-        value = "",
+        value = "lyme disease",
         width = NULL,
         placeholder = NULL
       ),
@@ -27,15 +27,23 @@ ui <- fluidPage(
       textInput(
         inputId = "term_qid",
         label = "Term QID",
-        value = "",
+        value = "Q201989",
         width = NULL,
         placeholder = NULL
       ),
-      submitButton(text = "Submit QID", icon = NULL, width = NULL)
-      ),
+      submitButton(text = "Submit QID", icon = NULL, width = NULL),
+      numericInput(
+        inputId = "n_articles",
+        label = "Number of articles to retrieve",
+        value = 10,
+        min = 0,
+        max = 1000,
+        step = 1,
+        width = NULL
+      )
+    ),
     
     mainPanel(
-
       # UI ouputs for the copy-to-clipboard buttons
       uiOutput("clip"),
       tags$a(href = "https://quickstatements.toolforge.org/#/batch", "Go to Quickstatements!"),
@@ -48,7 +56,8 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$search <- renderUI({
     term <- input$term
-    url <- a("Search on Wikidata",
+    url <- a(
+      "Search on Wikidata",
       href = paste0("https://www.wikidata.org/w/index.php?search=", term)
     )
     print("Here")
@@ -57,58 +66,63 @@ server <- function(input, output) {
   output$summary <- renderText({
     term <- input$term
     term_qid <- input$term_qid
-    paste("Obtaining up to 300 articles about", term, "that do not have", term_qid, "as main subject")
+    n_articles <- input$n_articles
+    paste(
+      "Obtaining up to",
+      as.character(n_articles),
+      "articles about",
+      term,
+      "that do not have",
+      term_qid,
+      "as main subject"
+    )
   })
-
-
-  output$candidate_qids <- renderDataTable(
-    {
-      term <- input$term
-      term_qid <- input$term_qid
-      url <- prepare_url_for_search(term)
-      ids <- pull_related_ids(url)
-      articles <- filter_for_instances_of_article(ids)
-      descriptions <- get_top_descriptions(
-        ids = ids,
-        article_ids = articles
-      )
-      descriptions$itemDescription <- NULL
-      return(head(descriptions))
-    },
-    escape = FALSE,
-    options = list(dom = "t")
-  )
-
-
+  
+  
+  output$candidate_qids <- renderDataTable({
+    term <- input$term
+    term_qid <- input$term_qid
+    url <- prepare_url_for_search(term)
+    ids <- pull_related_ids(url)
+    articles <- filter_for_instances_of_article(ids)
+    descriptions <- get_top_descriptions(ids = ids,
+                                         article_ids = articles)
+    descriptions$itemDescription <- NULL
+    return(head(descriptions))
+  },
+  escape = FALSE,
+  options = list(dom = "t"))
+  
+  
   output$qs <- renderText({
     term <- input$term
     term_qid <- input$term_qid
+    n_articles <- input$n_articles
     if (term_qid == "") {
       return("Waiting for a term QID")
     } else {
-      article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
-      result <- prepare_qs_to_render(
-        article_qids = article_qids,
-        term = term,
-        term_id = term_qid
-      )
+      article_qids <-
+        get_article_qids_via_maintenance_query(term, term_qid, n_articles)
+      result <- prepare_qs_to_render(article_qids = article_qids,
+                                     term = term,
+                                     term_id = term_qid)
       return(result)
     }
   })
-
-
+  
+  
   output$clip <- renderUI({
     term <- input$term
     term_qid <- input$term_qid
+    n_articles <- input$n_articles
     if (term_qid == "") {
       result <- "Waiting for a term QID"
     } else {
-      article_qids <- get_article_qids_via_maintenance_query(term, term_qid)
-      result <- prepare_qs_to_render(
-        article_qids = article_qids,
-        term = term,
-        term_id = term_qid
-      )
+      article_qids <-
+        get_article_qids_via_maintenance_query(term, term_qid, n_articles)
+      result <- prepare_qs_to_render(article_qids = article_qids,
+                                     term = term,
+                                     term_id = term_qid)
     }
     result <- paste(result, collapse = "")
     rclipButton("clipbtn", "Copy", result, icon("clipboard"))

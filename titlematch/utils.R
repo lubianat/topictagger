@@ -3,7 +3,7 @@ library(httr)
 library(WikidataQueryServiceR)
 
 
-get_article_qids_via_maintenance_query <- function(topic_term, topic_qid){
+get_article_qids_via_maintenance_query <- function(topic_term, topic_qid, n_articles=300){
 property = "P921"
 maintenance_query <- paste0('
 SELECT 
@@ -36,7 +36,7 @@ WHERE {
   # ============= Want to change the topic? Change the next line! =============
   FILTER CONTAINS(LCASE(?title), "', topic_term,'"). # also check for variants, e.g. without the dash and/ or with "2019"
 }
-LIMIT 300
+LIMIT ', as.character(n_articles), '
 
 ')
 
