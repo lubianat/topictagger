@@ -4,6 +4,7 @@ library(WikidataQueryServiceR)
 
 
 get_article_qids_via_maintenance_query <- function(topic_term, topic_qid, n_articles=300){
+topic_term <- tolower(topic_term)
 property = "P921"
 maintenance_query <- paste0('
 SELECT 
