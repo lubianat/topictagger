@@ -5,8 +5,8 @@ account: lubianat
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3532630
-bundleId: 4330847
+bundleId: 4339690
 url: https://lubianat.shinyapps.io/topictagger/
-when: 1615466646.03425
+when: 1615645207.16749
 asMultiple: FALSE
 asStatic: FALSE

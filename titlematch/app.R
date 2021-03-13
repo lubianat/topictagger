@@ -11,7 +11,7 @@ ui <- fluidPage(
               type = "image/x-icon"),
     
   ),
-  
+  titlePanel("TopicTagger"),
   sidebarLayout(
     sidebarPanel(
       textInput(
@@ -22,7 +22,10 @@ ui <- fluidPage(
         placeholder = NULL
       ),
       submitButton(text = "Submit term", icon = NULL, width = NULL),
+      br(),
+      p("Candidates for QIDS:"),
       dataTableOutput("candidate_qids"),
+      p("Your QID is not there? Then:"),
       uiOutput("search"),
       textInput(
         inputId = "term_qid",
@@ -40,14 +43,18 @@ ui <- fluidPage(
         max = 1000,
         step = 1,
         width = NULL
-      )
+      ),
+      tags$a(href = "https://github.com/lubianat/topictagger",
+             "GitHub Repository")
     ),
     
     mainPanel(
       # UI ouputs for the copy-to-clipboard buttons
+      h4("Tag articles on Wikidata based on their titles"),
       uiOutput("clip"),
       tags$a(href = "https://quickstatements.toolforge.org/#/batch", "Go to Quickstatements!"),
       textOutput("summary"),
+      
       verbatimTextOutput("qs")
     ),
   )
@@ -61,7 +68,7 @@ server <- function(input, output) {
       href = paste0("https://www.wikidata.org/w/index.php?search=", term)
     )
     print("Here")
-    tagList("URL link:", url)
+    tagList(url)
   })
   output$summary <- renderText({
     term <- input$term
@@ -125,7 +132,7 @@ server <- function(input, output) {
                                      term_id = term_qid)
     }
     result <- paste(result, collapse = "")
-    rclipButton("clipbtn", "Copy", result, icon("clipboard"))
+    rclipButton("clipbtn", "Copy Quickstatements commands", result, icon("clipboard"))
   })
 }
 
