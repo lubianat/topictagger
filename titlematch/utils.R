@@ -126,7 +126,7 @@ get_top_descriptions <- function(ids, article_ids) {
   for (u in descriptions_dataframe[["item"]])
   {
     qid <- str_replace(u, "http://www.wikidata.org/entity/", "")
-    link <- paste0("<a href=", u, ">", qid, "</a>")
+    link <- paste0('<a target="_blank" href=', u, ">", qid, "</a>")
     links <- c(links, link)
   }
   descriptions_dataframe[["item"]] <- links

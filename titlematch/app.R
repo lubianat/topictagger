@@ -44,7 +44,8 @@ ui <- fluidPage(
         step = 1,
         width = NULL
       ),
-      tags$a(href = "https://github.com/lubianat/topictagger",
+      tags$a(target="_blank",
+             href = "https://github.com/lubianat/topictagger",
              "GitHub Repository")
     ),
     
@@ -52,7 +53,9 @@ ui <- fluidPage(
       # UI ouputs for the copy-to-clipboard buttons
       h4("Tag articles on Wikidata based on their titles"),
       uiOutput("clip"),
-      tags$a(href = "https://quickstatements.toolforge.org/#/batch", "Go to Quickstatements!"),
+      tags$a( target="_blank",
+              href = "https://quickstatements.toolforge.org/#/batch",
+             "Go to Quickstatements!"),
       textOutput("summary"),
       
       verbatimTextOutput("qs")
@@ -65,6 +68,7 @@ server <- function(input, output) {
     term <- input$term
     url <- a(
       "Search on Wikidata",
+      target="_blank",
       href = paste0("https://www.wikidata.org/w/index.php?search=", term)
     )
     print("Here")
