@@ -14,15 +14,17 @@ ui <- fluidPage(
   titlePanel("TopicTagger"),
   sidebarLayout(
     sidebarPanel(
+      actionButton("do", "Get suggestion"),
+      submitButton(text = "Go", icon = NULL, width = NULL),
       textInput(
         inputId = "term",
         label = "Term for search",
-        value = "lyme disease",
+        value = "",
         width = NULL,
         placeholder = NULL
       ),
       p("Term is quoted before the search. System is capitalization-independent"),
-      submitButton(text = "Submit term", icon = NULL, width = NULL),
+      submitButton(text = "Check candidates", icon = NULL, width = NULL),
       br(),
       p("Candidates for QIDS:"),
       dataTableOutput("candidate_qids"),
@@ -31,7 +33,7 @@ ui <- fluidPage(
       textInput(
         inputId = "term_qid",
         label = "Term QID",
-        value = "Q201989",
+        value = "",
         width = NULL,
         placeholder = NULL
       ),
@@ -57,6 +59,7 @@ ui <- fluidPage(
       tags$a( target="_blank",
               href = "https://quickstatements.toolforge.org/#/batch",
              "Go to Quickstatements!"),
+      uiOutput("query_url"),
       textOutput("summary"),
       
       verbatimTextOutput("qs")
@@ -64,17 +67,47 @@ ui <- fluidPage(
   )
 )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+# Get a random disease as example ------------
+  observeEvent(input$do, {
+    random_disease = get_random_inflammatory_disease()
+    print(random_disease)
+    updateTextInput(session, "term", value = random_disease[["name"]])
+    
+    updateTextInput(session, "term_qid",
+                    value = random_disease[["qid"]])
+  })
+  
+  
+# Prepare candidates section ------------
+  
+  output$candidate_qids <- renderDataTable({
+    term <- input$term
+    url <- prepare_url_for_search(term)
+    ids <- pull_related_ids(url)
+    articles <- filter_for_instances_of_article(ids)
+    descriptions <- get_top_descriptions(ids = ids,
+                                         article_ids = articles)
+    descriptions$itemDescription <- NULL
+    return(head(descriptions))
+  },
+  escape = FALSE,
+  options = list(dom = "t"))
+  
   output$search <- renderUI({
     term <- input$term
     url <- a(
-      "Search on Wikidata",
+      "Search term on Wikidata",
       target="_blank",
       href = paste0("https://www.wikidata.org/w/index.php?search=", term)
     )
-    print("Here")
     tagList(url)
   })
+  
+
+# Prepare summary for user ------------
+  
   output$summary <- renderText({
     term <- input$term
     term_qid <- input$term_qid
@@ -90,21 +123,24 @@ server <- function(input, output) {
     )
   })
   
-  
-  output$candidate_qids <- renderDataTable({
+  output$query_url <- renderUI({
     term <- input$term
     term_qid <- input$term_qid
-    url <- prepare_url_for_search(term)
-    ids <- pull_related_ids(url)
-    articles <- filter_for_instances_of_article(ids)
-    descriptions <- get_top_descriptions(ids = ids,
-                                         article_ids = articles)
-    descriptions$itemDescription <- NULL
-    return(head(descriptions))
-  },
-  escape = FALSE,
-  options = list(dom = "t"))
-  
+    n_articles <- input$n_articles
+    print("Here")
+    if (term_qid != ""){
+      link = get_maintenance_query_url(term, term_qid,n_articles)
+      query_url <- a(
+        "See query on the Wikidata Query Service",
+        target="_blank",
+        href = link
+      )
+    } else {
+      query_url = ""
+    }
+
+    return(tagList(query_url))
+  })
   
   output$qs <- renderText({
     term <- input$term
