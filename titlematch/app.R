@@ -16,11 +16,12 @@ ui <- fluidPage(
     sidebarPanel(
       textInput(
         inputId = "term",
-        label = "Term",
+        label = "Term for search",
         value = "lyme disease",
         width = NULL,
         placeholder = NULL
       ),
+      p("Term is quoted before the search. System is capitalization-independent"),
       submitButton(text = "Submit term", icon = NULL, width = NULL),
       br(),
       p("Candidates for QIDS:"),
