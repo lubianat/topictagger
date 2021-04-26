@@ -14,30 +14,27 @@ ui <- fluidPage(
   titlePanel("TopicTagger"),
   sidebarLayout(
     sidebarPanel(
-      actionButton("do", "Get suggestion"),
-      submitButton(text = "Go", icon = NULL, width = NULL),
       textInput(
         inputId = "term",
         label = "Term for search",
-        value = "",
+        value = "lyme disease",
         width = NULL,
         placeholder = NULL
       ),
-      p("Term is quoted before the search. System is capitalization-independent"),
-      submitButton(text = "Check candidates", icon = NULL, width = NULL),
-      br(),
-      p("Candidates for QIDS:"),
-      dataTableOutput("candidate_qids"),
-      p("Your QID is not there? Then:"),
+      p(
+        "Term is quoted before the search. System is capitalization-independent"
+      ),
+      p("Don't know the QID?"),
       uiOutput("search"),
+      br(),
       textInput(
         inputId = "term_qid",
         label = "Term QID",
-        value = "",
+        value = "Q201989",
         width = NULL,
         placeholder = NULL
       ),
-      submitButton(text = "Submit QID", icon = NULL, width = NULL),
+      actionButton(inputId = "submit", label = "Submit QID", icon = NULL, width = NULL),
       numericInput(
         inputId = "n_articles",
         label = "Number of articles to retrieve",
@@ -47,7 +44,7 @@ ui <- fluidPage(
         step = 1,
         width = NULL
       ),
-      tags$a(target="_blank",
+      tags$a(target = "_blank",
              href = "https://github.com/lubianat/topictagger",
              "GitHub Repository")
     ),
@@ -56,8 +53,8 @@ ui <- fluidPage(
       # UI ouputs for the copy-to-clipboard buttons
       h4("Tag articles on Wikidata based on their titles"),
       uiOutput("clip"),
-      tags$a( target="_blank",
-              href = "https://quickstatements.toolforge.org/#/batch",
+      tags$a(target = "_blank",
+             href = "https://quickstatements.toolforge.org/#/batch",
              "Go to Quickstatements!"),
       uiOutput("query_url"),
       textOutput("summary"),
@@ -69,31 +66,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-# Get a random disease as example ------------
-  observeEvent(input$do, {
-    random_disease = get_random_inflammatory_disease()
-    print(random_disease)
-    updateTextInput(session, "term", value = random_disease[["name"]])
-    
-    updateTextInput(session, "term_qid",
-                    value = random_disease[["qid"]])
-  })
-  
-  
-# Prepare candidates section ------------
-  
-  output$candidate_qids <- renderDataTable({
-    term <- input$term
-    url <- prepare_url_for_search(term)
-    ids <- pull_related_ids(url)
-    articles <- filter_for_instances_of_article(ids)
-    descriptions <- get_top_descriptions(ids = ids,
-                                         article_ids = articles)
-    descriptions$itemDescription <- NULL
-    return(head(descriptions))
-  },
-  escape = FALSE,
-  options = list(dom = "t"))
+
   
   output$search <- renderUI({
     term <- input$term
@@ -104,9 +77,8 @@ server <- function(input, output, session) {
     )
     tagList(url)
   })
-  
 
-# Prepare summary for user ------------
+    # Prepare summary for user ------------
   
   output$summary <- renderText({
     term <- input$term
@@ -128,24 +100,27 @@ server <- function(input, output, session) {
     term_qid <- input$term_qid
     n_articles <- input$n_articles
     print("Here")
-    if (term_qid != ""){
-      link = get_maintenance_query_url(term, term_qid,n_articles)
-      query_url <- a(
-        "See query on the Wikidata Query Service",
-        target="_blank",
-        href = link
-      )
+    if (term_qid != "") {
+      link = get_maintenance_query_url(term, term_qid, n_articles)
+      query_url <- a("See query on the Wikidata Query Service",
+                     target = "_blank",
+                     href = link)
+      print(query_url)
     } else {
       query_url = ""
     }
-
+    
     return(tagList(query_url))
   })
   
-  output$qs <- renderText({
+  
+  # Prepare the Quickstatements to return ----------
+  
+  render_text_reactive <- eventReactive(input$submit, {
     term <- input$term
     term_qid <- input$term_qid
     n_articles <- input$n_articles
+    
     if (term_qid == "") {
       return("Waiting for a term QID")
     } else {
@@ -156,6 +131,10 @@ server <- function(input, output, session) {
                                      term_id = term_qid)
       return(result)
     }
+  })
+  
+  output$qs <- renderText({
+    render_text_reactive()
   })
   
   
@@ -173,7 +152,10 @@ server <- function(input, output, session) {
                                      term_id = term_qid)
     }
     result <- paste(result, collapse = "")
-    rclipButton("clipbtn", "Copy Quickstatements commands", result, icon("clipboard"))
+    rclipButton("clipbtn",
+                "Copy Quickstatements commands",
+                result,
+                icon("clipboard"))
   })
 }
 

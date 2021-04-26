@@ -2,30 +2,21 @@ library(stringr)
 library(httr)
 library(WikidataQueryServiceR)
 library(stringi)
+library(urltools)
 
-get_random_inflammatory_disease <- function(){
-  
-  magic_number = round(runif(1,1,40))
-  
-  query = paste0('SELECT ?item ?itemLabel 
-WHERE 
-{
-  ?item wdt:P279 wd:Q3508753.
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
-} OFFSET ', magic_number,' LIMIT 1')
-  
-  inflammatory_df <- query_wikidata(query)
-  disease = list()
-  disease[["name"]] <- inflammatory_df[["itemLabel"]]
-  disease[["qid"]] <- str_replace(inflammatory_df[["item"]], "http://www.wikidata.org/entity/", "")
-  return(disease)
+# Functions to build URLs  ---------------
+
+build_search_wikidata_url <- function(term){
+  url = paste0("https://www.wikidata.org/?search=", term)
+  return(urltools::url_encode(url))
 }
+
+# Maintenance queries (searching for articles) ---------------
 
 get_maintenance_query_url <- function(topic_term, topic_qid, n_articles=300){
   maintenance_query <- get_maintenance_query(topic_term, topic_qid, n_articles)
   
-  url = paste0("https://query.wikidata.org/#", URLencode(q, reserved = TRUE))
-  print(url)
+  url = paste0("https://query.wikidata.org/#",url_encode(maintenance_query))
   return(url)
 }
 
@@ -236,3 +227,4 @@ prepare_qs_to_render <- function(article_qids, term, term_id) {
   }
   return(result)
 }
+
