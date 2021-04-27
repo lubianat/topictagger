@@ -34,10 +34,18 @@ SELECT
 WHERE {
   hint:Query hint:optimizer "None".
   
+{ SELECT (GROUP_CONCAT(DISTINCT(?subject); separator="|") as ?subjects) WHERE {
+  ?subject_item wdt:P279* wd:', topic_qid, '.
+     BIND(REPLACE(STR(?subject_item), ".*Q", "P921=Q") AS ?subject) 
+
+   }
+}
+  
+  BIND(CONCAT("\\"', topic_term,'\\"  haswbstatement:P31=Q13442814 -haswbstatement:",  ?subjects) as ?full_query)
 {  SERVICE wikibase:mwapi {
     bd:serviceParam wikibase:api "Search";
                     wikibase:endpoint "www.wikidata.org";
-                    mwapi:srsearch "\\"', topic_term,'\\" haswbstatement:P31=Q13442814 -haswbstatement:P921=', topic_qid,'".
+                    mwapi:srsearch ?full_query.
       ?page_title wikibase:apiOutput mwapi:title.
   }
  }

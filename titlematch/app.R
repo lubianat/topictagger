@@ -35,13 +35,13 @@ ui <- fluidPage(
         placeholder = NULL
       ),
       actionButton(inputId = "submit", label = "Submit QID", icon = NULL, width = NULL),
-      numericInput(
+      sliderInput(
         inputId = "n_articles",
         label = "Number of articles to retrieve",
         value = 10,
         min = 0,
-        max = 1000,
-        step = 1,
+        max = 5000,
+        step = 20,
         width = NULL
       ),
       tags$a(target = "_blank",
