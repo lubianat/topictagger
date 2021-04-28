@@ -24,6 +24,8 @@ ui <- fluidPage(
       p(
         "Term is quoted before the search. System is capitalization-independent"
       ),
+      p( "Also search for the term with an 's' in the end?"),
+      checkboxInput(inputId="plural", label="get plural", value = FALSE, width = NULL),
       p("Don't know the QID?"),
       uiOutput("search"),
       br(),
@@ -120,12 +122,20 @@ server <- function(input, output, session) {
     term <- input$term
     term_qid <- input$term_qid
     n_articles <- input$n_articles
-    
+    plural <- input$plural
     if (term_qid == "") {
       return("Waiting for a term QID")
     } else {
       article_qids <-
         get_article_qids_via_maintenance_query(term, term_qid, n_articles)
+      
+      if (plural){
+      article_qids_plural <-
+        get_article_qids_via_maintenance_query(paste0(term,"s"), term_qid, n_articles)
+      
+      article_qids <- c(article_qids, article_qids_plural)
+      }
+      
       result <- prepare_qs_to_render(article_qids = article_qids,
                                      term = term,
                                      term_id = term_qid)
@@ -142,11 +152,21 @@ server <- function(input, output, session) {
     term <- input$term
     term_qid <- input$term_qid
     n_articles <- input$n_articles
+    plural <- input$plural
     if (term_qid == "") {
       result <- "Waiting for a term QID"
     } else {
       article_qids <-
         get_article_qids_via_maintenance_query(term, term_qid, n_articles)
+      print(article_qids)
+      if (plural){
+        article_qids_plural <-
+          get_article_qids_via_maintenance_query(paste0(term,"s"), term_qid, n_articles)
+        
+        article_qids <- c(article_qids, article_qids_plural)
+      }
+      print(article_qids)
+      
       result <- prepare_qs_to_render(article_qids = article_qids,
                                      term = term,
                                      term_id = term_qid)
