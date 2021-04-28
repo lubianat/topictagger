@@ -46,19 +46,20 @@ ui <- fluidPage(
         step = 20,
         width = NULL
       ),
+      br(),
       tags$a(target = "_blank",
              href = "https://github.com/lubianat/topictagger",
-             "GitHub Repository")
+             "GitHub Repository"),
+      uiOutput("query_url")
     ),
     
     mainPanel(
       # UI ouputs for the copy-to-clipboard buttons
       h4("Tag articles on Wikidata based on their titles"),
       uiOutput("clip"),
-      tags$a(target = "_blank",
+      tags$button(tags$a(target = "_blank",
              href = "https://quickstatements.toolforge.org/#/batch",
-             "Go to Quickstatements!"),
-      uiOutput("query_url"),
+             "Go to Quickstatements!")),
       textOutput("summary"),
       
       verbatimTextOutput("qs")
